@@ -295,4 +295,5 @@ def update_graph(selected_date):
 
 # Run the app
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(host='0.0.0.0', port=int(os.getenv('PORT', 10000)))
+
