@@ -1,1 +1,1 @@
-web: gunicorn --workers 2 --timeout 120 fred_dash:server
+web: gunicorn fred_dash:app
