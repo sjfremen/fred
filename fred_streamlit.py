@@ -1,0 +1,223 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from datetime import date
+
+# Set page config to light mode
+st.set_page_config(page_title="FRED Data Dashboard", layout="wide", initial_sidebar_state="expanded")
+
+# Apply custom CSS for light background
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #ffffff;
+        color: #000000;
+    }
+    .css-18e3th9 {
+        background-color: #ffffff;
+    }
+    .streamlit-expanderHeader {
+        background-color: #ffffff;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Load data
+@st.cache_data  # Cache the data to avoid reloading on every interaction
+def load_data():
+    df = pd.read_csv('fred_weekly.csv', parse_dates=['date'], index_col='date')
+    return df
+
+df = load_data()
+
+# Streamlit app
+st.title("FRED Data Dashboard")
+st.write("Net Liquidity = Federal Reserve's total assets less the TGA and RRP.")
+
+# Sidebar for filters
+st.sidebar.header("Filters")
+start_date = st.sidebar.date_input("Select Start Date", value=date(2010, 1, 1))
+
+# Filter data
+filtered_df = df[df.index >= pd.to_datetime(start_date)]
+
+# Display latest values
+latest_values = filtered_df.iloc[-1]
+st.subheader("Latest Values")
+col1, col2, col3 = st.columns(3)
+col1.metric("Net Liquidity", f"${latest_values['net_liq']:,.2f}")
+col2.metric("BTC Change", f"{latest_values['btc_change'] * 100:.2f}%")
+col3.metric("Nasdaq Change", f"{latest_values['nasdaq_change'] * 100:.2f}%")
+
+# Plot Net Liquidity
+st.subheader("Net Liquidity Over Time")
+fig_net_liq = px.line(filtered_df, x=filtered_df.index, y='net_liq', title='Net Liquidity')
+st.plotly_chart(fig_net_liq)
+
+# Plot Rolling Correlations
+st.subheader("Rolling Correlations")
+fig_corr = go.Figure()
+fig_corr.add_trace(go.Scatter(x=filtered_df.index, y=filtered_df['corr_netliq_btc'], mode='lines', name='BTC'))
+fig_corr.add_trace(go.Scatter(x=filtered_df.index, y=filtered_df['corr_netliq_nasdaq'], mode='lines', name='Nasdaq'))
+fig_corr.add_trace(go.Scatter(x=filtered_df.index, y=filtered_df['corr_netliq_sp500'], mode='lines', name='S&P 500'))
+fig_corr.update_layout(title='Rolling Correlations of Net Liquidity', xaxis_title='Date', yaxis_title='Correlation')
+st.plotly_chart(fig_corr)
+
+# Plot BTC vs Net Liquidity Change with Secondary Y-Axis
+st.subheader("BTC vs Net Liquidity Change")
+fig_btc = go.Figure()
+# Primary Y-Axis: Net Liquidity Change
+fig_btc.add_trace(go.Bar(
+    x=filtered_df.index,
+    y=filtered_df['net_liq_change'],
+    name='Net Liquidity Change',
+    marker_color=filtered_df['net_liq_change'].apply(lambda x: 'green' if x > 0 else 'red')
+))
+# Secondary Y-Axis: BTC Change
+fig_btc.add_trace(go.Scatter(
+    x=filtered_df.index,
+    y=filtered_df['btc_change'],
+    mode='lines',
+    name='BTC Change',
+    line=dict(color='red'),
+    yaxis='y2'
+))
+# Update layout for secondary y-axis
+fig_btc.update_layout(
+    title='BTC vs Net Liquidity Change',
+    xaxis_title='Date',
+    yaxis_title='Net Liquidity Change',
+    yaxis2=dict(
+        title='BTC Change',
+        overlaying='y',
+        side='right'
+    )
+)
+st.plotly_chart(fig_btc)
+
+# Plot Nasdaq vs Net Liquidity Change with Secondary Y-Axis
+st.subheader("Nasdaq vs Net Liquidity Change")
+fig_nasdaq = go.Figure()
+# Primary Y-Axis: Net Liquidity Change
+fig_nasdaq.add_trace(go.Bar(
+    x=filtered_df.index,
+    y=filtered_df['net_liq_change'],
+    name='Net Liquidity Change',
+    marker_color=filtered_df['net_liq_change'].apply(lambda x: 'green' if x > 0 else 'red')
+))
+# Secondary Y-Axis: Nasdaq Change
+fig_nasdaq.add_trace(go.Scatter(
+    x=filtered_df.index,
+    y=filtered_df['nasdaq_change'],
+    mode='lines',
+    name='Nasdaq Change',
+    line=dict(color='green'),
+    yaxis='y2'
+))
+# Update layout for secondary y-axis
+fig_nasdaq.update_layout(
+    title='Nasdaq vs Net Liquidity Change',
+    xaxis_title='Date',
+    yaxis_title='Net Liquidity Change',
+    yaxis2=dict(
+        title='Nasdaq Change',
+        overlaying='y',
+        side='right'
+    )
+)
+st.plotly_chart(fig_nasdaq)
+
+# Plot S&P 500 vs Net Liquidity Change with Secondary Y-Axis
+st.subheader("S&P 500 vs Net Liquidity Change")
+fig_sp500 = go.Figure()
+# Primary Y-Axis: Net Liquidity Change
+fig_sp500.add_trace(go.Bar(
+    x=filtered_df.index,
+    y=filtered_df['net_liq_change'],
+    name='Net Liquidity Change',
+    marker_color=filtered_df['net_liq_change'].apply(lambda x: 'green' if x > 0 else 'red')
+))
+# Secondary Y-Axis: S&P 500 Change
+fig_sp500.add_trace(go.Scatter(
+    x=filtered_df.index,
+    y=filtered_df['sp500_change'],
+    mode='lines',
+    name='S&P 500 Change',
+    line=dict(color='orange'),
+    yaxis='y2'
+))
+# Update layout for secondary y-axis
+fig_sp500.update_layout(
+    title='S&P 500 vs Net Liquidity Change',
+    xaxis_title='Date',
+    yaxis_title='Net Liquidity Change',
+    yaxis2=dict(
+        title='S&P 500 Change',
+        overlaying='y',
+        side='right'
+    )
+)
+st.plotly_chart(fig_sp500)
+
+# Credit Cycle Charts
+st.subheader("Credit Cycle Analysis")
+
+# Chart 1: 10y2y Scatter 1
+st.subheader("10y2y Scatter 1")
+fig_10y2y_1 = go.Figure()
+fig_10y2y_1.add_trace(
+    go.Scatter(
+        x=filtered_df.index,
+        y=filtered_df['10y2y'],
+        mode='lines',
+        name='10y2y',
+        line=dict(color='blue')
+    )
+)
+fig_10y2y_1.update_layout(
+    title='10y2y Scatter 1',
+    xaxis_title='Date',
+    yaxis_title='10y2y'
+)
+st.plotly_chart(fig_10y2y_1)
+
+# Chart 3: 10y2y Change vs Nasdaq Change
+st.subheader("10y2y Change vs Nasdaq Change")
+fig_10y2y_change = go.Figure()
+# Primary Y-Axis: 10y2y Change
+fig_10y2y_change.add_trace(
+    go.Scatter(
+        x=filtered_df.index,
+        y=filtered_df['10y2y_change'],
+        mode='markers',
+        name='10y2y Change',
+        marker=dict(color=filtered_df['10y2y_change'], colorscale='RdYlGn_r')
+    )
+)
+# Secondary Y-Axis: Nasdaq Change
+fig_10y2y_change.add_trace(
+    go.Scatter(
+        x=filtered_df.index,
+        y=filtered_df['nasdaq_change'],
+        mode='markers',
+        name='Nasdaq Change',
+        marker=dict(color='blue'),
+        yaxis='y2'
+    )
+)
+# Update layout for secondary y-axis
+fig_10y2y_change.update_layout(
+    title='10y2y Change vs Nasdaq Change',
+    xaxis_title='Date',
+    yaxis_title='10y2y Change',
+    yaxis2=dict(
+        title='Nasdaq Change',
+        overlaying='y',
+        side='right'
+    )
+)
+st.plotly_chart(fig_10y2y_change)
