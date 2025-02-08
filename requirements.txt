@@ -1,0 +1,13 @@
+requests
+pandas
+gspread
+fredapi
+plotly
+dash
+dash-core-components
+dash-html-components
+dash-table
+flask
+numpy
+statsmodels
+gunicorn
