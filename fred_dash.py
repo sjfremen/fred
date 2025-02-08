@@ -53,7 +53,7 @@ df_fred['corr_netliq_btc'] = df_fred['net_liq_change'].rolling(window=window_siz
 df_fred['corr_netliq_nasdaq'] = df_fred['net_liq_change'].rolling(window=window_size).corr(df_fred['nasdaq_change'])
 df_fred['corr_netliq_sp500'] = df_fred['net_liq_change'].rolling(window=window_size).corr(df_fred['sp500_change'])
 
-##df_fred = df_fred[df_fred.index >= '2015-01-01']
+df_fred = df_fred[df_fred.index > '2000-01-01']
 df_fred.to_csv('fred_weekly.csv', index=True)
 
 
@@ -184,7 +184,7 @@ def update_credit_cycle_graph(selected_date):
 
     # Update layout
     fig.update_layout(
-        height=1200, width=2800,
+        height=1200,
         showlegend=False,
         margin=dict(l=50, r=50, t=50, b=50),
         plot_bgcolor='white',
@@ -267,7 +267,6 @@ def update_graph(selected_date):
     # Update layout with titles, axis labels, and yaxis2
     fig.update_layout(
         height=1200,
-        width=2800,
         showlegend=False,
         yaxis=dict(title='Net Liquidity Change', side='left'),
         yaxis2=dict(title='Annual Change', side='right', overlaying='y1'),
