@@ -35,8 +35,8 @@ def load_data():
 df = load_data()
 
 # Streamlit app
-st.title("FRED Data Dashboard")
-st.write("Net Liquidity = Federal Reserve's total assets less the TGA and RRP.")
+st.title("FRED Data Dashboard (WIP)")
+st.write("Tracking interesting market data using FRED.")
 
 # Sidebar for filters
 st.sidebar.header("Filters")
@@ -45,16 +45,60 @@ start_date = st.sidebar.date_input("Select Start Date", value=date(2010, 1, 1))
 # Filter data
 filtered_df = df[df.index >= pd.to_datetime(start_date)]
 
-# Display latest values
+# Get the latest value (last row) and the previous 52-period value
 latest_values = filtered_df.iloc[-1]
-st.subheader("Latest Values")
-col1, col2, col3 = st.columns(3)
-col1.metric("Net Liquidity", f"${latest_values['net_liq']:,.2f}")
-col2.metric("BTC Change", f"{latest_values['btc_change'] * 100:.2f}%")
-col3.metric("Nasdaq Change", f"{latest_values['nasdaq_change'] * 100:.2f}%")
+previous_values = filtered_df.iloc[-53] if len(filtered_df) >= 53 else None
+
+# Extract price values (latest and previous 52-period)
+btc_price = latest_values['btc']
+nasdaq_price = latest_values['nasdaq']
+sp500_price = latest_values['SP500']
+net_liq = latest_values['net_liq']
+
+previous_btc_price = previous_values['btc'] if previous_values is not None else None
+previous_nasdaq_price = previous_values['nasdaq'] if previous_values is not None else None
+previous_sp500_price = previous_values['SP500'] if previous_values is not None else None
+previous_sp500_price = previous_values['net_liq'] if previous_values is not None else None
+
+# Extract pre-calculated change values
+btc_change = latest_values['btc_change']
+nasdaq_change = latest_values['nasdaq_change']
+sp500_change = latest_values['sp500_change']
+net_liq_change = latest_values['net_liq_change']
+
+# Prepare data for the table
+table_data = {
+    "Metric": ["BTC Price", "Nasdaq Price", "S&P 500 Price", 'Net Liquidity'],
+    "Latest Value": [
+        f"${btc_price:,.2f}" if btc_price is not None else "N/A",
+        f"${nasdaq_price:,.2f}" if nasdaq_price is not None else "N/A",
+        f"${sp500_price:,.2f}" if sp500_price is not None else "N/A",
+        f"${net_liq:,.2f}" if sp500_price is not None else "N/A"
+    ],
+    "Previous 52-Period Value": [
+        f"${previous_btc_price:,.2f}" if previous_btc_price is not None else "N/A",
+        f"${previous_nasdaq_price:,.2f}" if previous_nasdaq_price is not None else "N/A",
+        f"${previous_sp500_price:,.2f}" if previous_sp500_price is not None else "N/A",
+        f"${net_liq:,.2f}" if previous_sp500_price is not None else "N/A"
+    ],
+    "Change": [
+        f"{btc_change * 100:.2f}%" if btc_change is not None else "N/A",
+        f"{nasdaq_change * 100:.2f}%" if nasdaq_change is not None else "N/A",
+        f"{sp500_change * 100:.2f}%" if sp500_change is not None else "N/A",
+        f"{net_liq_change * 100:.2f}%" if sp500_change is not None else "N/A"
+    ]
+}
+
+# Convert to DataFrame
+table_df = pd.DataFrame(table_data)
+
+# Display the table
+st.subheader("Latest Price Values and Changes")
+st.table(table_df)
 
 # Plot Net Liquidity
 st.subheader("Net Liquidity Over Time")
+st.write("Net Liquidity = Federal Reserve's total assets less the TGA and RRP.")
 fig_net_liq = px.line(filtered_df, x=filtered_df.index, y='net_liq', title='Net Liquidity')
 st.plotly_chart(fig_net_liq)
 
@@ -167,7 +211,7 @@ st.plotly_chart(fig_sp500)
 st.subheader("Credit Cycle Analysis")
 
 # Chart 1: 10y2y Scatter 1
-st.subheader("10y2y Scatter 1")
+st.subheader("10Y2Y Spread")
 fig_10y2y_1 = go.Figure()
 fig_10y2y_1.add_trace(
     go.Scatter(
@@ -179,14 +223,14 @@ fig_10y2y_1.add_trace(
     )
 )
 fig_10y2y_1.update_layout(
-    title='10y2y Scatter 1',
+    title='10Y2Y Spread',
     xaxis_title='Date',
     yaxis_title='10y2y'
 )
 st.plotly_chart(fig_10y2y_1)
 
 # Chart 3: 10y2y Change vs Nasdaq Change
-st.subheader("10y2y Change vs Nasdaq Change")
+st.subheader("10Y2Y Change vs Nasdaq Change (Annual)")
 fig_10y2y_change = go.Figure()
 # Primary Y-Axis: 10y2y Change
 fig_10y2y_change.add_trace(
