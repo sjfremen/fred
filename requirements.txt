@@ -12,3 +12,4 @@ flask
 numpy
 statsmodels
 gunicorn
+dotenv
