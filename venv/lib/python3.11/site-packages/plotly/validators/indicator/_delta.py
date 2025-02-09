@@ -23,18 +23,22 @@ class DeltaValidator(_plotly_utils.basevalidators.CompoundValidator):
             position
                 Sets the position of delta with respect to the
                 number.
+            prefix
+                Sets a prefix appearing before the delta.
             reference
                 Sets the reference value to compute the delta.
                 By default, it is set to the current value.
             relative
                 Show relative change
+            suffix
+                Sets a suffix appearing next to the delta.
             valueformat
                 Sets the value formatting rule using d3
-                formatting mini-language which is similar to
-                those of Python. See
-                https://github.com/d3/d3-3.x-api-
-                reference/blob/master/Formatting.md#d3_format
+                formatting mini-languages which are very
+                similar to those in Python. For numbers, see: h
+                ttps://github.com/d3/d3-format/tree/v1.4.5#d3-
+                format.
 """,
             ),
-            **kwargs
+            **kwargs,
         )

@@ -30,29 +30,25 @@ class Dimension(_BaseTraceHierarchyType):
     @property
     def constraintrange(self):
         """
-        The domain range to which the filter on the dimension is
-        constrained. Must be an array of `[fromValue, toValue]` with
-        `fromValue <= toValue`, or if `multiselect` is not disabled,
-        you may give an array of arrays, where each inner array is
-        `[fromValue, toValue]`.
-    
-        The 'constraintrange' property is an info array that may be specified as:
-    
-        * a list or tuple of 2 elements where:
-    (0) The 'constraintrange[0]' property is a number and may be specified as:
-          - An int or float
-    (1) The 'constraintrange[1]' property is a number and may be specified as:
-          - An int or float
-    
-        * a 2D list where:
-    (0) The 'constraintrange[i][0]' property is a number and may be specified as:
-          - An int or float
-    (1) The 'constraintrange[i][1]' property is a number and may be specified as:
-          - An int or float
+            The domain range to which the filter on the dimension is
+            constrained. Must be an array of `[fromValue, toValue]` with
+            `fromValue <= toValue`, or if `multiselect` is not disabled,
+            you may give an array of arrays, where each inner array is
+            `[fromValue, toValue]`.
 
-        Returns
-        -------
-        list
+            The 'constraintrange' property is an info array that may be specified as:
+
+            * a list or tuple of 2 elements where:
+        (0) The 'constraintrange[0]' property accepts values of any type
+        (1) The 'constraintrange[1]' property accepts values of any type
+
+            * a 2D list where:
+        (0) The 'constraintrange[i][0]' property accepts values of any type
+        (1) The 'constraintrange[i][1]' property accepts values of any type
+
+            Returns
+            -------
+            list
         """
         return self["constraintrange"]
 
@@ -66,7 +62,7 @@ class Dimension(_BaseTraceHierarchyType):
     def label(self):
         """
         The shown name of the dimension.
-    
+
         The 'label' property is a string and must be specified as:
           - A string
           - A number that will be converted to a string
@@ -87,7 +83,7 @@ class Dimension(_BaseTraceHierarchyType):
     def multiselect(self):
         """
         Do we allow multiple selection ranges or just a single range?
-    
+
         The 'multiselect' property must be specified as a bool
         (either True, or False)
 
@@ -113,7 +109,7 @@ class Dimension(_BaseTraceHierarchyType):
         `name` alongside your modifications (including `visible: false`
         or `enabled: false` to hide it). Has no effect outside of a
         template.
-    
+
         The 'name' property is a string and must be specified as:
           - A string
           - A number that will be converted to a string
@@ -133,21 +129,21 @@ class Dimension(_BaseTraceHierarchyType):
     @property
     def range(self):
         """
-        The domain range that represents the full, shown axis extent.
-        Defaults to the `values` extent. Must be an array of
-        `[fromValue, toValue]` with finite numbers as elements.
-    
-        The 'range' property is an info array that may be specified as:
-    
-        * a list or tuple of 2 elements where:
-    (0) The 'range[0]' property is a number and may be specified as:
-          - An int or float
-    (1) The 'range[1]' property is a number and may be specified as:
-          - An int or float
+            The domain range that represents the full, shown axis extent.
+            Defaults to the `values` extent. Must be an array of
+            `[fromValue, toValue]` with finite numbers as elements.
 
-        Returns
-        -------
-        list
+            The 'range' property is an info array that may be specified as:
+
+            * a list or tuple of 2 elements where:
+        (0) The 'range[0]' property is a number and may be specified as:
+              - An int or float
+        (1) The 'range[1]' property is a number and may be specified as:
+              - An int or float
+
+            Returns
+            -------
+            list
         """
         return self["range"]
 
@@ -168,7 +164,7 @@ class Dimension(_BaseTraceHierarchyType):
         `enabled: false` to hide it). If there is no template or no
         matching item, this item will be hidden unless you explicitly
         show it with `visible: true`.
-    
+
         The 'templateitemname' property is a string and must be specified as:
           - A string
           - A number that will be converted to a string
@@ -190,13 +186,15 @@ class Dimension(_BaseTraceHierarchyType):
         """
         Sets the tick label formatting rule using d3 formatting mini-
         languages which are very similar to those in Python. For
-        numbers, see: https://github.com/d3/d3-3.x-api-
-        reference/blob/master/Formatting.md#d3_format And for dates
-        see: https://github.com/d3/d3-time-format#locale_format We add
-        one item to d3's date formatter: "%{n}f" for fractional seconds
-        with n digits. For example, *2016-10-13 09:15:23.456* with
-        tickformat "%H~%M~%S.%2f" would display "09~15~23.46"
-    
+        numbers, see:
+        https://github.com/d3/d3-format/tree/v1.4.5#d3-format. And for
+        dates see: https://github.com/d3/d3-time-
+        format/tree/v2.2.3#locale_format. We add two items to d3's date
+        formatter: "%h" for half of the year as a decimal number as
+        well as "%{n}f" for fractional seconds with n digits. For
+        example, *2016-10-13 09:15:23.456* with tickformat
+        "%H~%M~%S.%2f" would display "09~15~23.46"
+
         The 'tickformat' property is a string and must be specified as:
           - A string
           - A number that will be converted to a string
@@ -217,7 +215,7 @@ class Dimension(_BaseTraceHierarchyType):
     def ticktext(self):
         """
         Sets the text displayed at the ticks position via `tickvals`.
-    
+
         The 'ticktext' property is an array that may be specified as a tuple,
         list, numpy array, or pandas Series
 
@@ -236,8 +234,8 @@ class Dimension(_BaseTraceHierarchyType):
     @property
     def ticktextsrc(self):
         """
-        Sets the source reference on Chart Studio Cloud for  ticktext .
-    
+        Sets the source reference on Chart Studio Cloud for `ticktext`.
+
         The 'ticktextsrc' property must be specified as a string or
         as a plotly.grid_objs.Column object
 
@@ -257,7 +255,7 @@ class Dimension(_BaseTraceHierarchyType):
     def tickvals(self):
         """
         Sets the values at which ticks on this axis appear.
-    
+
         The 'tickvals' property is an array that may be specified as a tuple,
         list, numpy array, or pandas Series
 
@@ -276,8 +274,8 @@ class Dimension(_BaseTraceHierarchyType):
     @property
     def tickvalssrc(self):
         """
-        Sets the source reference on Chart Studio Cloud for  tickvals .
-    
+        Sets the source reference on Chart Studio Cloud for `tickvals`.
+
         The 'tickvalssrc' property must be specified as a string or
         as a plotly.grid_objs.Column object
 
@@ -300,7 +298,7 @@ class Dimension(_BaseTraceHierarchyType):
         point in the dataset, therefore the `values` vector for all
         dimensions must be the same (longer vectors will be truncated).
         Each value must be a finite number.
-    
+
         The 'values' property is an array that may be specified as a tuple,
         list, numpy array, or pandas Series
 
@@ -319,8 +317,8 @@ class Dimension(_BaseTraceHierarchyType):
     @property
     def valuessrc(self):
         """
-        Sets the source reference on Chart Studio Cloud for  values .
-    
+        Sets the source reference on Chart Studio Cloud for `values`.
+
         The 'valuessrc' property must be specified as a string or
         as a plotly.grid_objs.Column object
 
@@ -341,7 +339,7 @@ class Dimension(_BaseTraceHierarchyType):
         """
         Shows the dimension when set to `true` (the default). Hides the
         dimension for `false`.
-    
+
         The 'visible' property must be specified as a bool
         (either True, or False)
 
@@ -400,24 +398,25 @@ class Dimension(_BaseTraceHierarchyType):
             Sets the tick label formatting rule using d3 formatting
             mini-languages which are very similar to those in
             Python. For numbers, see:
-            https://github.com/d3/d3-3.x-api-
-            reference/blob/master/Formatting.md#d3_format And for
-            dates see: https://github.com/d3/d3-time-
-            format#locale_format We add one item to d3's date
-            formatter: "%{n}f" for fractional seconds with n
-            digits. For example, *2016-10-13 09:15:23.456* with
-            tickformat "%H~%M~%S.%2f" would display "09~15~23.46"
+            https://github.com/d3/d3-format/tree/v1.4.5#d3-format.
+            And for dates see: https://github.com/d3/d3-time-
+            format/tree/v2.2.3#locale_format. We add two items to
+            d3's date formatter: "%h" for half of the year as a
+            decimal number as well as "%{n}f" for fractional
+            seconds with n digits. For example, *2016-10-13
+            09:15:23.456* with tickformat "%H~%M~%S.%2f" would
+            display "09~15~23.46"
         ticktext
             Sets the text displayed at the ticks position via
             `tickvals`.
         ticktextsrc
             Sets the source reference on Chart Studio Cloud for
-            ticktext .
+            `ticktext`.
         tickvals
             Sets the values at which ticks on this axis appear.
         tickvalssrc
             Sets the source reference on Chart Studio Cloud for
-            tickvals .
+            `tickvals`.
         values
             Dimension values. `values[n]` represents the value of
             the `n`th point in the dataset, therefore the `values`
@@ -426,7 +425,7 @@ class Dimension(_BaseTraceHierarchyType):
             number.
         valuessrc
             Sets the source reference on Chart Studio Cloud for
-            values .
+            `values`.
         visible
             Shows the dimension when set to `true` (the default).
             Hides the dimension for `false`.
@@ -449,11 +448,11 @@ class Dimension(_BaseTraceHierarchyType):
         values=None,
         valuessrc=None,
         visible=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Construct a new Dimension object
-        
+
         The dimensions (variables) of the parallel coordinates chart.
         2..60 dimensions are supported.
 
@@ -503,24 +502,25 @@ class Dimension(_BaseTraceHierarchyType):
             Sets the tick label formatting rule using d3 formatting
             mini-languages which are very similar to those in
             Python. For numbers, see:
-            https://github.com/d3/d3-3.x-api-
-            reference/blob/master/Formatting.md#d3_format And for
-            dates see: https://github.com/d3/d3-time-
-            format#locale_format We add one item to d3's date
-            formatter: "%{n}f" for fractional seconds with n
-            digits. For example, *2016-10-13 09:15:23.456* with
-            tickformat "%H~%M~%S.%2f" would display "09~15~23.46"
+            https://github.com/d3/d3-format/tree/v1.4.5#d3-format.
+            And for dates see: https://github.com/d3/d3-time-
+            format/tree/v2.2.3#locale_format. We add two items to
+            d3's date formatter: "%h" for half of the year as a
+            decimal number as well as "%{n}f" for fractional
+            seconds with n digits. For example, *2016-10-13
+            09:15:23.456* with tickformat "%H~%M~%S.%2f" would
+            display "09~15~23.46"
         ticktext
             Sets the text displayed at the ticks position via
             `tickvals`.
         ticktextsrc
             Sets the source reference on Chart Studio Cloud for
-            ticktext .
+            `ticktext`.
         tickvals
             Sets the values at which ticks on this axis appear.
         tickvalssrc
             Sets the source reference on Chart Studio Cloud for
-            tickvals .
+            `tickvals`.
         values
             Dimension values. `values[n]` represents the value of
             the `n`th point in the dataset, therefore the `values`
@@ -529,7 +529,7 @@ class Dimension(_BaseTraceHierarchyType):
             number.
         valuessrc
             Sets the source reference on Chart Studio Cloud for
-            values .
+            `values`.
         visible
             Shows the dimension when set to `true` (the default).
             Hides the dimension for `false`.
@@ -555,8 +555,8 @@ class Dimension(_BaseTraceHierarchyType):
         else:
             raise ValueError(
                 """\
-The first argument to the plotly.graph_objs.parcoords.Dimension 
-constructor must be a dict or 
+The first argument to the plotly.graph_objs.parcoords.Dimension
+constructor must be a dict or
 an instance of :class:`plotly.graph_objs.parcoords.Dimension`"""
             )
 

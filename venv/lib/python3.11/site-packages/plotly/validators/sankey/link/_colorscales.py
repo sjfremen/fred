@@ -22,12 +22,12 @@ class ColorscalesValidator(_plotly_utils.basevalidators.CompoundArrayValidator):
                 lowest (0) and highest (1) values are required.
                 For example, `[[0, 'rgb(0,0,255)'], [1,
                 'rgb(255,0,0)']]`. To control the bounds of the
-                colorscale in color space, use`cmin` and
+                colorscale in color space, use `cmin` and
                 `cmax`. Alternatively, `colorscale` may be a
-                palette name string of the following list: Grey
-                s,YlGnBu,Greens,YlOrRd,Bluered,RdBu,Reds,Blues,
-                Picnic,Rainbow,Portland,Jet,Hot,Blackbody,Earth
-                ,Electric,Viridis,Cividis.
+                palette name string of the following list: Blac
+                kbody,Bluered,Blues,Cividis,Earth,Electric,Gree
+                ns,Greys,Hot,Jet,Picnic,Portland,Rainbow,RdBu,R
+                eds,Viridis,YlGnBu,YlOrRd.
             label
                 The label of the links to color based on their
                 concentration within a flow.
@@ -54,5 +54,5 @@ class ColorscalesValidator(_plotly_utils.basevalidators.CompoundArrayValidator):
                 you explicitly show it with `visible: true`.
 """,
             ),
-            **kwargs
+            **kwargs,
         )

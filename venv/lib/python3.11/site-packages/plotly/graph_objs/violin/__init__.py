@@ -1,8 +1,10 @@
 import sys
+from typing import TYPE_CHECKING
 
-if sys.version_info < (3, 7):
+if sys.version_info < (3, 7) or TYPE_CHECKING:
     from ._box import Box
     from ._hoverlabel import Hoverlabel
+    from ._legendgrouptitle import Legendgrouptitle
     from ._line import Line
     from ._marker import Marker
     from ._meanline import Meanline
@@ -11,6 +13,7 @@ if sys.version_info < (3, 7):
     from ._unselected import Unselected
     from . import box
     from . import hoverlabel
+    from . import legendgrouptitle
     from . import marker
     from . import selected
     from . import unselected
@@ -19,10 +22,18 @@ else:
 
     __all__, __getattr__, __dir__ = relative_import(
         __name__,
-        [".box", ".hoverlabel", ".marker", ".selected", ".unselected"],
+        [
+            ".box",
+            ".hoverlabel",
+            ".legendgrouptitle",
+            ".marker",
+            ".selected",
+            ".unselected",
+        ],
         [
             "._box.Box",
             "._hoverlabel.Hoverlabel",
+            "._legendgrouptitle.Legendgrouptitle",
             "._line.Line",
             "._marker.Marker",
             "._meanline.Meanline",
