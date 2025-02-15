@@ -43,7 +43,7 @@ df_monthly = load_monthly_data()
 
 # Streamlit app
 st.title("FRED Data Dashboard (WIP)")
-st.write("Tracking market cycles using FRED data.")
+st.write("Tracking interesting market data using FRED.")
 
 # Sidebar for filters
 st.sidebar.header("Filters")
@@ -121,6 +121,11 @@ filtered_monthly_df_2015 = filtered_monthly_df[filtered_monthly_df.index >= '201
 st.subheader("Market Regime Analysis")
 st.write("Regimes use monthly data lagged for CPI & BBK GDP to estimate market regimes above/below 2 percent monthly annualized growth")
 
+# Create regime data table with additional returns
+regime_data = filtered_monthly_df_2015[['bbk_gdp_yoy', 'cpi_yoy', 'spx_return', 'ndx_return', 'btc_return', 'market_regime']].copy()
+regime_data = regime_data.round(4)  # Round to 4 decimal places for cleaner display
+regime_data.columns = ['GDP Growth', 'CPI Growth', 'S&P500 Returns', 'NASDAQ Returns', 'Bitcoin Returns', 'Market Regime']
+
 # Display the regime data table with colored backgrounds
 def color_regime(val):
     if val == 'Goldilocks':
@@ -133,33 +138,7 @@ def color_regime(val):
         return 'background-color: orange'
     return ''
 
-# Create regime data table with additional returns
-regime_data = filtered_monthly_df_2015[['bbk_gdp_yoy', 'cpi_yoy', 'spx_return', 'ndx_return', 'btc_return', 'market_regime']].copy()
-regime_data = regime_data.round(4)  # Round to 4 decimal places for cleaner display
-regime_data.columns = ['GDP Growth', 'CPI Growth', 'S&P500 Returns', 'NASDAQ Returns', 'Bitcoin Returns', 'Market Regime']
-
-st.write("Monthly Data by Regime:")
 st.dataframe(regime_data.style.applymap(color_regime, subset=['Market Regime']))
-
-# Calculate and display regime counts
-regime_counts = filtered_monthly_df_2015['market_regime'].value_counts()
-st.write("Number of Months in Each Regime:")
-st.dataframe(regime_counts)
-
-# Calculate and display average returns by market regime
-avg_returns = filtered_monthly_df_2015.groupby('market_regime')[['spx_return', 'ndx_return', 'btc_return']].mean()
-avg_returns = avg_returns.round(4) * 100  # Convert to percentage
-avg_returns.columns = ['S&P500 Avg Return %', 'NASDAQ Avg Return %', 'Bitcoin Avg Return %']
-
-# Display average returns table with colored backgrounds
-def color_returns(val):
-    if val > 0:
-        return f'background-color: rgba(0, 255, 0, {min(abs(val)/20, 0.5)})'
-    else:
-        return f'background-color: rgba(255, 0, 0, {min(abs(val)/20, 0.5)})'
-
-st.write("Average Monthly Returns by Market Regime:")
-st.dataframe(avg_returns.style.applymap(color_returns))
 
 # Create scatter plot of GDP vs CPI colored by regime
 fig_regime_scatter = go.Figure()

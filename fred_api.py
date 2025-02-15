@@ -81,10 +81,14 @@ def process_monthly_data(df):
 
     # Calculate year-over-year changes for CPI and GDP
     df['cpi_yoy'] = df['cpi'].pct_change(periods=12)*100
+    df['cpi_mom_change'] = df['cpi'].pct_change()
+    df['cpi_annualized_mom'] = ((1 + df['cpi_mom_change']) ** 12 - 1) * 100
+
     df['bbk_gdp_yoy'] = df['bbk_gdp']
 
     # Lag CPI and GDP by one month
     df['cpi_yoy_lagged'] = df['cpi_yoy'].shift(1)
+    df['cpi_annualized_mom_lagged'] = df['cpi_annualized_mom'].shift(1)
     df['bbk_gdp_yoy_lagged'] = df['bbk_gdp_yoy'].shift(1)
 
     # Calculate asset returns
@@ -94,11 +98,11 @@ def process_monthly_data(df):
 
     # Define market regimes using lagged values
     def classify_regime(row):
-        if row['bbk_gdp_yoy_lagged'] > 2 and row['cpi_yoy_lagged'] <= 2:
+        if row['bbk_gdp_yoy_lagged'] > 2 and row['cpi_annualized_mom_lagged'] <= 2:
             return "Goldilocks"
-        elif row['bbk_gdp_yoy_lagged'] > 2 and row['cpi_yoy_lagged'] > 2:
+        elif row['bbk_gdp_yoy_lagged'] > 2 and row['cpi_annualized_mom_lagged'] > 2:
             return "Inflation"
-        elif row['bbk_gdp_yoy_lagged'] <= 2 and row['cpi_yoy_lagged'] <= 2:
+        elif row['bbk_gdp_yoy_lagged'] <= 2 and row['cpi_annualized_mom_lagged'] <= 2:
             return "Deflation"
         else:
             return "Stagflation"

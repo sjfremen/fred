@@ -43,7 +43,7 @@ df_monthly = load_monthly_data()
 
 # Streamlit app
 st.title("FRED Data Dashboard (WIP)")
-st.write("Tracking market cycles using FRED data.")
+st.write("Tracking interesting market data using FRED.")
 
 # Sidebar for filters
 st.sidebar.header("Filters")
@@ -119,7 +119,12 @@ filtered_monthly_df_2015 = filtered_monthly_df[filtered_monthly_df.index >= '201
 
 # Add Market Regime Analysis Section
 st.subheader("Market Regime Analysis")
-st.write("Regimes use monthly data lagged for CPI & BBK GDP to estimate market regimes above/below 2 percent monthly annualized growth")
+st.write("Market regimes are determined by GDP and CPI growth rates relative to 2% annual growth")
+
+# Create regime data table with additional returns
+regime_data = filtered_monthly_df_2015[['bbk_gdp_yoy', 'cpi_yoy', 'spx_return', 'ndx_return', 'btc_return', 'market_regime']].copy()
+regime_data = regime_data.round(4)  # Round to 4 decimal places for cleaner display
+regime_data.columns = ['GDP Growth', 'CPI Growth', 'S&P500 Returns', 'NASDAQ Returns', 'Bitcoin Returns', 'Market Regime']
 
 # Display the regime data table with colored backgrounds
 def color_regime(val):
@@ -133,33 +138,7 @@ def color_regime(val):
         return 'background-color: orange'
     return ''
 
-# Create regime data table with additional returns
-regime_data = filtered_monthly_df_2015[['bbk_gdp_yoy', 'cpi_yoy', 'spx_return', 'ndx_return', 'btc_return', 'market_regime']].copy()
-regime_data = regime_data.round(4)  # Round to 4 decimal places for cleaner display
-regime_data.columns = ['GDP Growth', 'CPI Growth', 'S&P500 Returns', 'NASDAQ Returns', 'Bitcoin Returns', 'Market Regime']
-
-st.write("Monthly Data by Regime:")
 st.dataframe(regime_data.style.applymap(color_regime, subset=['Market Regime']))
-
-# Calculate and display regime counts
-regime_counts = filtered_monthly_df_2015['market_regime'].value_counts()
-st.write("Number of Months in Each Regime:")
-st.dataframe(regime_counts)
-
-# Calculate and display average returns by market regime
-avg_returns = filtered_monthly_df_2015.groupby('market_regime')[['spx_return', 'ndx_return', 'btc_return']].mean()
-avg_returns = avg_returns.round(4) * 100  # Convert to percentage
-avg_returns.columns = ['S&P500 Avg Return %', 'NASDAQ Avg Return %', 'Bitcoin Avg Return %']
-
-# Display average returns table with colored backgrounds
-def color_returns(val):
-    if val > 0:
-        return f'background-color: rgba(0, 255, 0, {min(abs(val)/20, 0.5)})'
-    else:
-        return f'background-color: rgba(255, 0, 0, {min(abs(val)/20, 0.5)})'
-
-st.write("Average Monthly Returns by Market Regime:")
-st.dataframe(avg_returns.style.applymap(color_returns))
 
 # Create scatter plot of GDP vs CPI colored by regime
 fig_regime_scatter = go.Figure()
@@ -168,8 +147,8 @@ for regime, color in color_map.items():
     regime_data = filtered_monthly_df_2015[filtered_monthly_df_2015['market_regime'] == regime]
     fig_regime_scatter.add_trace(
         go.Scatter(
-            x=regime_data['bbk_gdp_yoy_lagged'],
-            y=regime_data['cpi_annualized_mom_lagged'],
+            x=regime_data['bbk_gdp_yoy'],
+            y=regime_data['cpi_yoy'],
             mode='markers',
             name=regime,
             marker=dict(color=color, size=8, opacity=0.7)
@@ -193,71 +172,45 @@ st.plotly_chart(fig_regime_scatter)
 
 # New Chart: Bitcoin Price Scatter Plot Colored by Market Regime (2015-Onward)
 st.subheader("Bitcoin by Market Regime")
+st.write("Regimes use monthly data lagged for CPI & BBK GDP to estimate market regimes above/below 2 percent annual growth")
 
-# Create the scatter plot using Plotly
+# Create Bitcoin price chart with regime background
 fig_btc_regime = go.Figure()
-for regime, color in color_map.items():
+
+# Add colored background rectangles for each regime
+for regime in filtered_monthly_df_2015['market_regime'].unique():
     regime_data = filtered_monthly_df_2015[filtered_monthly_df_2015['market_regime'] == regime]
-    fig_btc_regime.add_trace(
-        go.Scatter(
+    
+    if len(regime_data) > 0:
+        fig_btc_regime.add_trace(go.Scatter(
             x=regime_data.index,
             y=regime_data['btc'],
-            mode='markers',
+            fill='tonexty',
+            mode='none',
             name=regime,
-            marker=dict(color=color, size=8, opacity=0.7)
-        )
-    )
+            fillcolor=color_map[regime].replace(')', ', 0.3)'),  # Add transparency to background
+            showlegend=True
+        ))
+
+# Add Bitcoin price line
+fig_btc_regime.add_trace(go.Scatter(
+    x=filtered_monthly_df_2015.index,
+    y=filtered_monthly_df_2015['btc'],
+    mode='lines',
+    line=dict(color='grey', width=2),
+    name='Bitcoin Price'
+))
 
 # Update layout
 fig_btc_regime.update_layout(
-    title='Bitcoin Price by Market Regime (2015-Onward)',
-    #yaxis_title='Bitcoin Price (USD)',
-    yaxis_type='log',  # Use log scale for y-axis
-    legend=dict(x=1.05, y=1, xanchor='left', yanchor='top'),
-    template='plotly_white'
-)
-
-# Format x-axis to show years
-fig_btc_regime.update_xaxes(
-    tickformat='%Y',
-    dtick='M12'  # Show ticks every 12 months
+    title='Bitcoin Price by Market Regime',
+    xaxis_title='Date',
+    yaxis_title='Bitcoin Price (USD)',
+    template='plotly_white',
+    hovermode='x unified'
 )
 
 st.plotly_chart(fig_btc_regime)
-
-# New Chart: Bitcoin Price Scatter Plot Colored by Market Regime (2015-Onward)
-st.subheader("Nasdaq by Market Regime")
-
-# Create the scatter plot using Plotly
-fig_ndq_regime = go.Figure()
-for regime, color in color_map.items():
-    regime_data = filtered_monthly_df_2015[filtered_monthly_df_2015['market_regime'] == regime]
-    fig_ndq_regime.add_trace(
-        go.Scatter(
-            x=regime_data.index,
-            y=regime_data['ndx'],
-            mode='markers',
-            name=regime,
-            marker=dict(color=color, size=8, opacity=0.7)
-        )
-    )
-
-# Update layout
-fig_ndq_regime.update_layout(
-    title='Nasdaq Price by Market Regime (2015-Onward)',
-    yaxis_type='log',  # Use log scale for y-axis
-    legend=dict(x=1.05, y=1, xanchor='left', yanchor='top'),
-    template='plotly_white'
-)
-
-# Format x-axis to show years
-fig_ndq_regime.update_xaxes(
-    tickformat='%Y',
-    dtick='M12'  # Show ticks every 12 months
-)
-
-st.plotly_chart(fig_ndq_regime)
-
 
 # Plot Net Liquidity
 st.subheader("Net Liquidity Over Time")
