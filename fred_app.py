@@ -51,9 +51,10 @@ start_date = st.sidebar.date_input("Select Start Date", value=date(2010, 1, 1))
 
 # Filter weekly data
 filtered_weekly_df = df_weekly[df_weekly.index >= pd.to_datetime(start_date)]
-
-# Filter monthly data
 filtered_monthly_df = df_monthly[df_monthly.index >= pd.to_datetime(start_date)]
+filtered_monthly_df_2015 = filtered_monthly_df[filtered_monthly_df.index >= '2015-01-01']
+
+
 
 # Get the latest value (last row) and the previous 52-period value
 latest_values = filtered_weekly_df.iloc[-1]
@@ -113,9 +114,6 @@ color_map = {
     "Deflation": "red",
     "Stagflation": "orange"
 }
-
-# Filter data to start from 2015
-filtered_monthly_df_2015 = filtered_monthly_df[filtered_monthly_df.index >= '2015-01-01']
 
 # Add Market Regime Analysis Section
 st.subheader("Market Regime Analysis")
