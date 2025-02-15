@@ -14,7 +14,7 @@ if not FRED_API_KEY:
 # Initialize FRED API client
 fred = Fred(api_key=FRED_API_KEY)
 
-# Fetch FRED data
+# Fetch FRED data (weekly)
 def fetch_fred_data():
     date_index = pd.to_datetime(fred.get_series('FF').index)
     data = {
@@ -29,7 +29,29 @@ def fetch_fred_data():
     }
     return pd.DataFrame(data).set_index('date')
 
-# Process FRED data
+# Fetch FRED data (monthly)
+def fetch_monthly_data():
+    date_index = pd.to_datetime(fred.get_series('CPIAUCSL').index)
+    data = {
+        'date': date_index,
+        'cpi': fred.get_series('CPIAUCSL').reindex(date_index),
+        'bbk_gdp': fred.get_series('BBKMGDP').reindex(date_index),
+    }
+    
+    # Fetch end-of-month values for asset prices
+    spx = fred.get_series('SP500', end_of_period='M')
+    ndx = fred.get_series('NASDAQ100', end_of_period='M')
+    btc = fred.get_series('CBBTCUSD', end_of_period='M')
+    
+    # Reindex asset price data to match CPI dates
+    data['spx'] = spx.reindex(date_index, method='ffill')
+    data['ndx'] = ndx.reindex(date_index, method='ffill')
+    data['btc'] = btc.reindex(date_index, method='ffill')
+    
+    return pd.DataFrame(data).set_index('date')
+
+
+# Process FRED data (weekly)
 def process_data(df):
     # Forward-fill missing values and resample to weekly frequency
     df.fillna(method='ffill', inplace=True)
@@ -52,13 +74,59 @@ def process_data(df):
     # Filter data to start from 2000
     return df[df.index > '2000-01-01']
 
+# Process FRED data (monthly)
+def process_monthly_data(df):
+    # Forward-fill missing values
+    df.fillna(method='ffill', inplace=True)
+
+    # Calculate year-over-year changes for CPI and GDP
+    df['cpi_yoy'] = df['cpi'].pct_change(periods=12)*100
+    df['bbk_gdp_yoy'] = df['bbk_gdp']
+
+    # Lag CPI and GDP by one month
+    df['cpi_yoy_lagged'] = df['cpi_yoy'].shift(1)
+    df['bbk_gdp_yoy_lagged'] = df['bbk_gdp_yoy'].shift(1)
+
+    # Calculate asset returns
+    df['spx_return'] = df['spx'].pct_change()
+    df['ndx_return'] = df['ndx'].pct_change()
+    df['btc_return'] = df['btc'].pct_change()
+
+    # Define market regimes using lagged values
+    def classify_regime(row):
+        if row['bbk_gdp_yoy_lagged'] > 2 and row['cpi_yoy_lagged'] <= 2:
+            return "Goldilocks"
+        elif row['bbk_gdp_yoy_lagged'] > 2 and row['cpi_yoy_lagged'] > 2:
+            return "Inflation"
+        elif row['bbk_gdp_yoy_lagged'] <= 2 and row['cpi_yoy_lagged'] <= 2:
+            return "Deflation"
+        else:
+            return "Stagflation"
+
+    # Apply regime classification
+    df['market_regime'] = df.apply(classify_regime, axis=1)
+
+    # Filter data to start from 2000
+    return df[df.index > '2000-01-01']
+
+
+
+
 # Save processed data to CSV
-def save_data(df, filename='fred_weekly.csv'):
+def save_data(df, filename):
     df.to_csv(filename, index=True)
 
 # Main function
 if __name__ == "__main__":
-    df = fetch_fred_data()
-    df = process_data(df)
-    save_data(df)
-    print("Data saved to fred_weekly.csv")
+    # Process weekly data
+    weekly_df = fetch_fred_data()
+    weekly_df = process_data(weekly_df)
+    save_data(weekly_df, 'fred_weekly.csv')
+    print("Weekly data saved to fred_weekly.csv")
+
+    # Process monthly data
+    monthly_df = fetch_monthly_data()
+    monthly_df = process_monthly_data(monthly_df)
+    save_data(monthly_df, 'fred_monthly.csv')
+    print("Monthly data saved to fred_monthly.csv")
+

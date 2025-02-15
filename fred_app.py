@@ -26,13 +26,20 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Load data
+# Load weekly data
 @st.cache_data  # Cache the data to avoid reloading on every interaction
-def load_data():
+def load_weekly_data():
     df = pd.read_csv('fred_weekly.csv', parse_dates=['date'], index_col='date')
     return df
 
-df = load_data()
+# Load monthly data for the new chart
+@st.cache_data
+def load_monthly_data():
+    df = pd.read_csv('fred_monthly.csv', parse_dates=['date'], index_col='date')
+    return df
+
+df_weekly = load_weekly_data()
+df_monthly = load_monthly_data()
 
 # Streamlit app
 st.title("FRED Data Dashboard (WIP)")
@@ -42,12 +49,15 @@ st.write("Tracking interesting market data using FRED.")
 st.sidebar.header("Filters")
 start_date = st.sidebar.date_input("Select Start Date", value=date(2010, 1, 1))
 
-# Filter data
-filtered_df = df[df.index >= pd.to_datetime(start_date)]
+# Filter weekly data
+filtered_weekly_df = df_weekly[df_weekly.index >= pd.to_datetime(start_date)]
+
+# Filter monthly data
+filtered_monthly_df = df_monthly[df_monthly.index >= pd.to_datetime(start_date)]
 
 # Get the latest value (last row) and the previous 52-period value
-latest_values = filtered_df.iloc[-1]
-previous_values = filtered_df.iloc[-53] if len(filtered_df) >= 53 else None
+latest_values = filtered_weekly_df.iloc[-1]
+previous_values = filtered_weekly_df.iloc[-53] if len(filtered_weekly_df) >= 53 else None
 
 # Extract price values (latest and previous 52-period)
 btc_price = latest_values['btc']
@@ -96,18 +106,64 @@ table_df = pd.DataFrame(table_data)
 st.subheader("Latest Price Values and Changes")
 st.table(table_df)
 
+# New Chart: Bitcoin Price Scatter Plot Colored by Market Regime (2015-Onward)
+st.subheader("Bitcoin by Market Regime")
+st.write("Regimes use monthly data lagged for CPI & BBK GDP to estimate market regimes above/below 2 percent annual growth")
+
+# Define color map for market regimes
+color_map = {
+    "Goldilocks": "green",
+    "Inflation": "blue",
+    "Deflation": "red",
+    "Stagflation": "orange"
+}
+
+# Filter data to start from 2015
+filtered_monthly_df_2015 = filtered_monthly_df[filtered_monthly_df.index >= '2015-01-01']
+
+# Create the scatter plot using Plotly
+fig_btc_regime = go.Figure()
+for regime, color in color_map.items():
+    regime_data = filtered_monthly_df_2015[filtered_monthly_df_2015['market_regime'] == regime]
+    fig_btc_regime.add_trace(
+        go.Scatter(
+            x=regime_data.index,
+            y=regime_data['btc'],
+            mode='markers',
+            name=regime,
+            marker=dict(color=color, size=8, opacity=0.7)
+        )
+    )
+
+# Update layout
+fig_btc_regime.update_layout(
+    title='Bitcoin Price by Market Regime (2015-Onward)',
+    yaxis_title='Bitcoin Price (USD)',
+    yaxis_type='log',  # Use log scale for y-axis
+    legend=dict(x=1.05, y=1, xanchor='left', yanchor='top'),
+    template='plotly_white'
+)
+
+# Format x-axis to show years
+fig_btc_regime.update_xaxes(
+    tickformat='%Y',
+    dtick='M12'  # Show ticks every 12 months
+)
+
+st.plotly_chart(fig_btc_regime)
+
 # Plot Net Liquidity
 st.subheader("Net Liquidity Over Time")
 st.write("Net Liquidity = Federal Reserve's total assets less the TGA and RRP.")
-fig_net_liq = px.line(filtered_df, x=filtered_df.index, y='net_liq', title='Net Liquidity')
+fig_net_liq = px.line(filtered_weekly_df, x=filtered_weekly_df.index, y='net_liq', title='Net Liquidity')
 st.plotly_chart(fig_net_liq)
 
 # Plot Rolling Correlations
 st.subheader("Rolling Correlations")
 fig_corr = go.Figure()
-fig_corr.add_trace(go.Scatter(x=filtered_df.index, y=filtered_df['corr_netliq_btc'], mode='lines', name='BTC'))
-fig_corr.add_trace(go.Scatter(x=filtered_df.index, y=filtered_df['corr_netliq_nasdaq'], mode='lines', name='Nasdaq'))
-fig_corr.add_trace(go.Scatter(x=filtered_df.index, y=filtered_df['corr_netliq_sp500'], mode='lines', name='S&P 500'))
+fig_corr.add_trace(go.Scatter(x=filtered_weekly_df.index, y=filtered_weekly_df['corr_netliq_btc'], mode='lines', name='BTC'))
+fig_corr.add_trace(go.Scatter(x=filtered_weekly_df.index, y=filtered_weekly_df['corr_netliq_nasdaq'], mode='lines', name='Nasdaq'))
+fig_corr.add_trace(go.Scatter(x=filtered_weekly_df.index, y=filtered_weekly_df['corr_netliq_sp500'], mode='lines', name='S&P 500'))
 fig_corr.update_layout(title='Rolling Correlations of Net Liquidity', xaxis_title='Date', yaxis_title='Correlation')
 st.plotly_chart(fig_corr)
 
@@ -116,15 +172,15 @@ st.subheader("BTC vs Net Liquidity Change")
 fig_btc = go.Figure()
 # Primary Y-Axis: Net Liquidity Change
 fig_btc.add_trace(go.Bar(
-    x=filtered_df.index,
-    y=filtered_df['net_liq_change'],
+    x=filtered_weekly_df.index,
+    y=filtered_weekly_df['net_liq_change'],
     name='Net Liquidity Change',
-    marker_color=filtered_df['net_liq_change'].apply(lambda x: 'green' if x > 0 else 'red')
+    marker_color=filtered_weekly_df['net_liq_change'].apply(lambda x: 'green' if x > 0 else 'red')
 ))
 # Secondary Y-Axis: BTC Change
 fig_btc.add_trace(go.Scatter(
-    x=filtered_df.index,
-    y=filtered_df['btc_change'],
+    x=filtered_weekly_df.index,
+    y=filtered_weekly_df['btc_change'],
     mode='lines',
     name='BTC Change',
     line=dict(color='red'),
@@ -148,15 +204,15 @@ st.subheader("Nasdaq vs Net Liquidity Change")
 fig_nasdaq = go.Figure()
 # Primary Y-Axis: Net Liquidity Change
 fig_nasdaq.add_trace(go.Bar(
-    x=filtered_df.index,
-    y=filtered_df['net_liq_change'],
+    x=filtered_weekly_df.index,
+    y=filtered_weekly_df['net_liq_change'],
     name='Net Liquidity Change',
-    marker_color=filtered_df['net_liq_change'].apply(lambda x: 'green' if x > 0 else 'red')
+    marker_color=filtered_weekly_df['net_liq_change'].apply(lambda x: 'green' if x > 0 else 'red')
 ))
 # Secondary Y-Axis: Nasdaq Change
 fig_nasdaq.add_trace(go.Scatter(
-    x=filtered_df.index,
-    y=filtered_df['nasdaq_change'],
+    x=filtered_weekly_df.index,
+    y=filtered_weekly_df['nasdaq_change'],
     mode='lines',
     name='Nasdaq Change',
     line=dict(color='green'),
@@ -180,15 +236,15 @@ st.subheader("S&P 500 vs Net Liquidity Change")
 fig_sp500 = go.Figure()
 # Primary Y-Axis: Net Liquidity Change
 fig_sp500.add_trace(go.Bar(
-    x=filtered_df.index,
-    y=filtered_df['net_liq_change'],
+    x=filtered_weekly_df.index,
+    y=filtered_weekly_df['net_liq_change'],
     name='Net Liquidity Change',
-    marker_color=filtered_df['net_liq_change'].apply(lambda x: 'green' if x > 0 else 'red')
+    marker_color=filtered_weekly_df['net_liq_change'].apply(lambda x: 'green' if x > 0 else 'red')
 ))
 # Secondary Y-Axis: S&P 500 Change
 fig_sp500.add_trace(go.Scatter(
-    x=filtered_df.index,
-    y=filtered_df['sp500_change'],
+    x=filtered_weekly_df.index,
+    y=filtered_weekly_df['sp500_change'],
     mode='lines',
     name='S&P 500 Change',
     line=dict(color='orange'),
@@ -215,8 +271,8 @@ st.subheader("10Y2Y Spread")
 fig_10y2y_1 = go.Figure()
 fig_10y2y_1.add_trace(
     go.Scatter(
-        x=filtered_df.index,
-        y=filtered_df['10y2y'],
+        x=filtered_weekly_df.index,
+        y=filtered_weekly_df['10y2y'],
         mode='lines',
         name='10y2y',
         line=dict(color='blue')
@@ -235,18 +291,18 @@ fig_10y2y_change = go.Figure()
 # Primary Y-Axis: 10y2y Change
 fig_10y2y_change.add_trace(
     go.Scatter(
-        x=filtered_df.index,
-        y=filtered_df['10y2y_change'],
+        x=filtered_weekly_df.index,
+        y=filtered_weekly_df['10y2y_change'],
         mode='markers',
         name='10y2y Change',
-        marker=dict(color=filtered_df['10y2y_change'], colorscale='RdYlGn_r')
+        marker=dict(color=filtered_weekly_df['10y2y_change'], colorscale='RdYlGn_r')
     )
 )
 # Secondary Y-Axis: Nasdaq Change
 fig_10y2y_change.add_trace(
     go.Scatter(
-        x=filtered_df.index,
-        y=filtered_df['nasdaq_change'],
+        x=filtered_weekly_df.index,
+        y=filtered_weekly_df['nasdaq_change'],
         mode='markers',
         name='Nasdaq Change',
         marker=dict(color='blue'),
