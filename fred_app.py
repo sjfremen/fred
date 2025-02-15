@@ -134,7 +134,7 @@ def color_regime(val):
     return ''
 
 # Create regime data table with additional returns
-regime_data = filtered_monthly_df_2015[['bbk_gdp_yoy', 'cpi_yoy', 'spx_return', 'ndx_return', 'btc_return', 'market_regime']].copy()
+regime_data = filtered_monthly_df_2015[['bbk_gdp_yoy_lagged', 'cpi_annualized_mom_lagged', 'spx_return', 'ndx_return', 'btc_return', 'market_regime']].copy()
 regime_data = regime_data.round(4)  # Round to 4 decimal places for cleaner display
 regime_data.columns = ['GDP Growth', 'CPI Growth', 'S&P500 Returns', 'NASDAQ Returns', 'Bitcoin Returns', 'Market Regime']
 
