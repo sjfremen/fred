@@ -39,6 +39,7 @@ def fetch_monthly_data():
         'date': date_index,
         'cpi': cpi_series,
         'bbk_gdp': fred.get_series('BBKMGDP', frequency='m', aggregation_method='eop').reindex(date_index),
+        'm2': fred.get_series('M2SL', frequency='m', aggregation_method='eop').reindex(date_index),
     }
     
     # Fetch asset prices with explicit end-of-month values
@@ -96,6 +97,9 @@ def process_monthly_data(df):
     df['cpi_mom_change'] = df['cpi'].pct_change()
     df['cpi_annualized_mom'] = ((1 + df['cpi_mom_change']) ** 12 - 1) * 100
     df['cpi_annualized_mom_lagged'] = df['cpi_annualized_mom'].shift(1)
+
+    df['m2_yoy'] = df['m2'].pct_change(periods=12)*100
+    df['btc_yoy'] = df['btc'].pct_change(periods=12)*100  # Add yearly BTC return
 
     df['wei_mom_change'] = df['wei'].diff()
     df['wei_mom_annualized'] = df['wei_mom_change'] * 12

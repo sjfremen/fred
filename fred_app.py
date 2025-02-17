@@ -378,11 +378,142 @@ with tab1:
 
     st.plotly_chart(fig_ndq_regime)
 
+    # New Chart: Nasdaq Price Line Chart with Market Regime Background
+    st.subheader("Nasdaq by Market Regime")
+
+    # Create the line plot using Plotly
+    fig_ndx_regime = go.Figure()
+
+    # Add shaded backgrounds for each regime period (reusing regime_changes from before)
+    added_to_legend = set()  # Reset legend tracking
+    
+    # Add shaded backgrounds for each regime period
+    for i in range(len(regime_changes)-1):
+        start_date = regime_changes[i][0]
+        end_date = regime_changes[i+1][0]
+        regime = regime_changes[i][1]
+        
+        fig_ndx_regime.add_vrect(
+            x0=start_date,
+            x1=end_date,
+            fillcolor=color_map[regime],
+            opacity=0.2,
+            layer="below",
+            line_width=0,
+            name=regime,
+            showlegend=(regime not in added_to_legend)
+        )
+        added_to_legend.add(regime)
+
+    # Add the last regime period to the end of the data
+    if regime_changes:
+        last_start = regime_changes[-1][0]
+        last_regime = regime_changes[-1][1]
+        fig_ndx_regime.add_vrect(
+            x0=last_start,
+            x1=filtered_monthly_df_2015.index[-1],
+            fillcolor=color_map[last_regime],
+            opacity=0.2,
+            layer="below",
+            line_width=0,
+            name=last_regime,
+            showlegend=(last_regime not in added_to_legend)
+        )
+
+    # Add Nasdaq price line
+    fig_ndx_regime.add_trace(
+        go.Scatter(
+            x=filtered_monthly_df_2015.index,
+            y=filtered_monthly_df_2015['ndx'],
+            mode='lines',
+            name='Nasdaq Price',
+            line=dict(color='black', width=2)
+        )
+    )
+
+    # Update layout
+    fig_ndx_regime.update_layout(
+        title='Nasdaq Price by Market Regime (2015-Onward)',
+        yaxis_type='log',  # Use log scale for y-axis
+        template='plotly_white',
+        showlegend=True,
+        legend=dict(
+            yanchor="top",
+            y=0.99,
+            xanchor="left",
+            x=1.05
+        ),
+        xaxis=dict(
+            showgrid=False,
+            tickformat='%Y',
+            dtick='M12'  # Show ticks every 12 months
+        ),
+        yaxis=dict(
+            showgrid=False
+        )
+    )
+
+    st.plotly_chart(fig_ndx_regime)
+
+    # Update existing regime scatter plots to remove gridlines
+    # For the GDP vs CPI scatter plot
+    fig_regime_scatter.update_layout(
+        xaxis=dict(showgrid=False),
+        yaxis=dict(showgrid=False)
+    )
+
+    # For the Bitcoin scatter plot
+    fig_btc_regime.update_layout(
+        xaxis=dict(showgrid=False),
+        yaxis=dict(showgrid=False)
+    )
+
+    # For the Nasdaq scatter plot
+    fig_ndq_regime.update_layout(
+        xaxis=dict(showgrid=False),
+        yaxis=dict(showgrid=False)
+    )
+
 # Net Liquidity Tab
 with tab2:
     st.subheader("Net Liquidity Analysis")
     
-    # Move all net liquidity related charts here
+    # Add M2 YoY vs BTC YoY Change chart (now first)
+    st.write("M2 Money Supply Year-over-Year Change vs Bitcoin Year-over-Year Return")
+    fig_m2_btc = go.Figure()
+    
+    # Primary Y-Axis: M2 YoY Change
+    fig_m2_btc.add_trace(go.Bar(
+        x=filtered_monthly_df.index,
+        y=filtered_monthly_df['m2_yoy'],
+        name='M2 YoY Change',
+        marker_color=filtered_monthly_df['m2_yoy'].apply(lambda x: 'green' if x > 0 else 'red')
+    ))
+    
+    # Secondary Y-Axis: BTC YoY Change
+    fig_m2_btc.add_trace(go.Scatter(
+        x=filtered_monthly_df.index,
+        y=filtered_monthly_df['btc_yoy'],  # Now using yearly change
+        mode='lines',
+        name='BTC Annual Return',
+        line=dict(color='orange'),
+        yaxis='y2'
+    ))
+    
+    # Update layout for secondary y-axis
+    fig_m2_btc.update_layout(
+        title='M2 YoY Change vs BTC Annual Return',
+        xaxis_title='Date',
+        yaxis_title='M2 YoY Change (%)',
+        yaxis2=dict(
+            title='BTC Annual Return (%)',
+            overlaying='y',
+            side='right'
+        )
+    )
+    st.plotly_chart(fig_m2_btc)
+
+    # Move all other net liquidity related charts below
     st.write("Net Liquidity = Federal Reserve's total assets less the TGA and RRP.")
     fig_net_liq = px.line(filtered_weekly_df, x=filtered_weekly_df.index, y='net_liq', title='Net Liquidity')
     st.plotly_chart(fig_net_liq)
